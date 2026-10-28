@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "champs_communs": ["resume", "tags", "sources", "maj"],
+  "champs_liste": ["tags", "sources", "documents", "tags_proposes"],
+  "non_vides_communs": {
+    "resume": {},
+    "sources": {"pourquoi": "chaque fiche garde un lien vers sa source"}
+  },
+  "dates_communes": {
+    "maj": {"vide_permis": false}
+  },
+  "types": {
+    "projet": {
+      "emplacement": "Projets/(?P<slug>[^/]+)/(?P=slug)\\.md",
+      "champs_communs": true,
+      "obligatoires": ["depot"],
+      "facettes_uniques": ["statut", "projet"],
+      "facette_du_slug": "projet",
+      "non_vides": {"depot": {"sauf_si_tag": "statut/idee"}}
+    },
+    "composant": {
+      "emplacement": "Projets/(?P<slug>[^/]+)/composants/[^/]+\\.md",
+      "champs_communs": true,
+      "obligatoires": ["chemin"],
+      "facettes_uniques": ["projet"],
+      "facette_du_slug": "projet",
+      "non_vides": {"chemin": {"pourquoi": "la fiche composant pointe vers le code"}}
+    },
+    "connaissance": {
+      "emplacement": "Connaissances/[^/]+\\.md",
+      "champs_communs": true
+    },
+    "cours": {
+      "emplacement": "Etudes/(?P<slug>[^/]+)/(?P=slug)\\.md",
+      "champs_communs": true,
+      "obligatoires": ["echeance"],
+      "facettes_uniques": ["statut", "cours"],
+      "facette_du_slug": "cours",
+      "dates": {"echeance": {"vide_permis": true}}
+    },
+    "notion": {
+      "emplacement": "Etudes/(?P<slug>[^/]+)/notions/[^/]+\\.md",
+      "champs_communs": true,
+      "obligatoires": ["maitrise", "revise_le"],
+      "facettes_uniques": ["cours"],
+      "facette_du_slug": "cours",
+      "dates": {"revise_le": {"vide_permis": true}},
+      "valeurs": {"maitrise": ["0", "1", "2", "3", "4"]}
+    },
+    "travail": {
+      "emplacement": "Etudes/(?P<slug>[^/]+)/travaux/[^/]+\\.md",
+      "champs_communs": true,
+      "obligatoires": ["echeance", "documents"],
+      "facettes_uniques": ["statut", "cours"],
+      "facettes_au_moins_une": ["type"],
+      "facette_du_slug": "cours",
+      "dates": {"echeance": {"vide_permis": false}}
+    },
+    "inbox": {
+      "emplacement": "00-Inbox/[^/]+\\.md",
+      "obligatoires": ["titre", "date", "origine", "provenance", "sources", "a_valider"],
+      "non_vides": {"titre": {}, "origine": {}},
+      "dates": {"date": {"format": "%Y-%m-%dT%H:%M", "libelle": "AAAA-MM-JJTHH:MM", "vide_permis": false}},
+      "valeurs": {"provenance": ["interne", "externe"], "a_valider": ["true", "false"]},
+      "si": [
+        {
+          "champ": "provenance", "vaut": "externe",
+          "alors_champ": "a_valider", "alors_vaut": "true",
+          "message": "contenu externe : a_valider doit valoir true"
+        }
+      ]
+    }
+  }
+}

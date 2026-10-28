@@ -1,11 +1,22 @@
+import json
+import re
+import shutil
+from pathlib import Path
+
 import pytest
 
 from scripts.valider_fiches import (
     ErreurFormat,
+    ErreurSchema,
+    charger_schema,
     charger_tags,
     lire_frontmatter,
+    main,
     valider_coffre,
 )
+
+SCHEMA_DE_TEST = Path(__file__).parent / "fixtures" / "_schema.json"
+VRAI_COFFRE = Path("D:/Europa/5. Memoire IA")
 
 TAGS = """# Vocabulaire
 - `statut/actif` — en cours
@@ -70,6 +81,7 @@ a_valider: false
 
 def creer_coffre(tmp_path, fichiers):
     (tmp_path / "_TAGS.md").write_text(TAGS, encoding="utf-8")
+    shutil.copy(SCHEMA_DE_TEST, tmp_path / "_schema.json")
     for chemin, contenu in fichiers.items():
         cible = tmp_path / chemin
         cible.parent.mkdir(parents=True, exist_ok=True)
@@ -174,3 +186,84 @@ def test_noms_de_fichier_en_double(tmp_path):
 def test_fiche_de_type_inconnu(tmp_path):
     erreurs = erreurs_de(tmp_path, {"Connaissances/x.md": "---\nfiche: recette\n---\n"})
     assert any("recette" in e for e in erreurs)
+
+
+def schema_modifie(tmp_path, modifier):
+    """Écrit dans tmp_path un coffre dont le schéma de test a été modifié par `modifier`."""
+    coffre = creer_coffre(tmp_path, {})
+    schema = json.loads(SCHEMA_DE_TEST.read_text(encoding="utf-8"))
+    modifier(schema)
+    (coffre / "_schema.json").write_text(json.dumps(schema), encoding="utf-8")
+    return coffre
+
+
+def test_type_ajoute_dans_le_schema_sans_toucher_au_code(tmp_path):
+    def ajouter_recette(schema):
+        schema["types"]["recette"] = {
+            "emplacement": r"Cuisine/[^/]+\.md",
+            "champs_communs": True,
+            "obligatoires": ["difficulte"],
+            "valeurs": {"difficulte": ["facile", "difficile"]},
+        }
+
+    coffre = schema_modifie(tmp_path, ajouter_recette)
+    recette = """---
+fiche: recette
+resume: Des crêpes.
+tags: [domaine/code]
+sources: [grand-mère]
+maj: 2026-10-28
+difficulte: facile
+---
+"""
+    (coffre / "Cuisine").mkdir()
+    (coffre / "Cuisine" / "crepes.md").write_text(recette, encoding="utf-8")
+    assert valider_coffre(coffre) == []
+    (coffre / "Cuisine" / "crepes.md").write_text(recette.replace("facile", "moyen"), encoding="utf-8")
+    assert any("difficulte" in message for _, message in valider_coffre(coffre))
+
+
+def test_schema_absent(tmp_path):
+    coffre = creer_coffre(tmp_path, {})
+    (coffre / "_schema.json").unlink()
+    with pytest.raises(ErreurSchema, match="introuvable"):
+        valider_coffre(coffre)
+    assert main([str(coffre)]) == 2
+
+
+def test_schema_json_invalide(tmp_path):
+    coffre = creer_coffre(tmp_path, {})
+    (coffre / "_schema.json").write_text("{ pas du json", encoding="utf-8")
+    with pytest.raises(ErreurSchema, match="JSON"):
+        valider_coffre(coffre)
+    assert main([str(coffre)]) == 2
+
+
+@pytest.mark.parametrize("modifier, attendu", [
+    (lambda s: s["types"]["projet"].pop("emplacement"), "emplacement"),
+    (lambda s: s["types"]["projet"].update(emplacement="Projets/(["), "emplacement invalide"),
+    (lambda s: s["types"]["projet"].update(obligatoires="depot"), "liste de textes"),
+    (lambda s: s["types"]["projet"].update(facettes_unique=["statut"]), "clé inconnue"),
+    (lambda s: s["types"]["connaissance"].update(facette_du_slug="projet"), "slug"),
+    (lambda s: s["types"]["inbox"]["si"][0].pop("message"), "règle si"),
+    (lambda s: s.update(types={}), "types"),
+    (lambda s: s.update(version="deux"), "version"),
+])
+def test_schema_mal_decrit(tmp_path, modifier, attendu):
+    coffre = schema_modifie(tmp_path, modifier)
+    with pytest.raises(ErreurSchema, match=attendu):
+        valider_coffre(coffre)
+    assert main([str(coffre)]) == 2
+
+
+@pytest.mark.skipif(not VRAI_COFFRE.is_dir(), reason="coffre réel absent")
+def test_types_de_formats_md_et_du_schema_identiques():
+    schema = charger_schema(VRAI_COFFRE / "_schema.json")
+    formats = (VRAI_COFFRE / "_FORMATS.md").read_text(encoding="utf-8")
+    types_documentes = set(re.findall(r"^\| ([a-z]+) \| ", formats, flags=re.MULTILINE)) - {"fiche"}
+    assert types_documentes == set(schema["types"])
+
+
+@pytest.mark.skipif(not VRAI_COFFRE.is_dir(), reason="coffre réel absent")
+def test_vrai_coffre_valide():
+    assert valider_coffre(VRAI_COFFRE) == []
