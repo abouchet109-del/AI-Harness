@@ -1,0 +1,5 @@
+.env
+*.env
+.obsidian/workspace*.json
+Thumbs.db
+desktop.ini
