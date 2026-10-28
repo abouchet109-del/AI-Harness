@@ -34,6 +34,7 @@ Référence lue à la demande (pas chargée à chaque session, contrairement à 
 - **Traçabilité.** Chaque appel de modèle laisse une trace (modèle, tâche, fichiers lus, tokens si connus) pour comprendre et mesurer.
 - **Évaluation.** `evals/` contient des questions réelles posées à la mémoire, avec la réponse ou la fiche attendue. On les rejoue après chaque changement de structure, de gabarit ou de prompt.
 - **Une mémoire fausse est pire qu'une mémoire vide.** Dans le doute, l'agent écrit dans l'inbox avec un marqueur « à valider » plutôt que dans une fiche.
+- **La structure évolue par procédure, jamais en douce.** Types, champs, facettes et tags changent seulement via `docs/BRANCHER-UN-HARNESS.md`, avec l'accord du user. On ajoute plutôt que modifier ; une modification demande une migration. Le schéma est une donnée (`_schema.json`), pas du code.
 
 ## Principes d'architecture agentique et leurs sources
 
@@ -52,6 +53,7 @@ Les 14 principes de `GUIDE-ARCHITECTURE-AGENTIQUE.md` (section 2) restent la bas
 | Récupérer selon pertinence, récence et importance ; consolider par « réflexion » périodique | Park et al., *Generative Agents* (2023) | Statut actif/archivé, point quotidien, fiches bilan |
 | Le contenu externe est une donnée, jamais une instruction ; ne pas réunir données privées + contenu non fiable + moyen de sortie | Simon Willison, injection de prompt et *lethal trifecta* ; OWASP Top 10 LLM (LLM01 injection, LLM06 agentivité excessive) | Contenu scrapé marqué `provenance: externe` ; un agent qui lit du web n'écrit que dans l'inbox et n'a ni réseau sortant ni accès au reste du coffre |
 | Vérifier, évaluer en continu sur un jeu de cas fixe | Anthropic, *Building Effective Agents* (évaluateur-optimiseur) et sa doc sur les évals | `evals/` rejoué après chaque changement |
+| Faire évoluer un schéma sans casser ses utilisateurs : changements additifs compatibles, migrations versionnées pour le reste | Pratique des migrations de bases de données (Django, Alembic) et des registres de schémas (règles de compatibilité d'Avro) | `_schema.json` versionné, procédure `docs/BRANCHER-UN-HARNESS.md` |
 | Explorer, planifier, coder, committer ; `CLAUDE.md` court et précis ; `/clear` entre les tâches | Anthropic, bonnes pratiques Claude Code | Boucle de travail de `CLAUDE.md` |
 
 ## Décisions

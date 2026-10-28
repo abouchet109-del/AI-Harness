@@ -46,7 +46,7 @@ Un seul arbre de classement (code → langage → type → projet → fonction) 
 
   Exemple, les études : `Etudes/<cours>/` contient la fiche cours (échéances, reste à faire), une fiche par notion (maîtrise 0-4, dernière révision, suivi daté) et une par travail (deadline, documents). Anki reste la source de vérité de ses cartes et de leur planning ; son adaptateur dépose une synthèse dans l'inbox. Le code d'un harness (Anki, prof de maths) est, lui, un projet dans `Projets/`.
 
-- **Se brancher à la mémoire** : un harness lit en suivant la pyramide et écrit uniquement dans l'inbox, au format de `_FORMATS.md` (le contrat, vérifié par `scripts/valider_fiches.py`). Il n'a pas besoin de connaître le reste.
+- **Se brancher à la mémoire** : un harness lit en suivant la pyramide et écrit uniquement dans l'inbox, au format de `_FORMATS.md` (le contrat, vérifié par `scripts/valider_fiches.py`). Il n'a pas besoin de connaître le reste. S'il apporte une information que la structure ne sait pas stocker, la structure évolue par une procédure validée (voir section 7).
 
 ### 3. Écriture via une boîte de réception
 
@@ -80,13 +80,30 @@ Sources d'alimentation :
 - Une **skill `memoire`** décrit la procédure de zoom (lire `_INDEX.md` → fiche projet → fiche composant → code) et les règles d'écriture (inbox uniquement).
 - Le coffre est ajouté comme dossier accessible aux sessions Claude Code. Pas de serveur MCP au début : lire des fichiers Markdown suffit. Un serveur MCP (recherche, sémantique) se rajoute plus tard sans changer la structure.
 
+### 7. Faire évoluer la structure quand un harness se branche
+
+Chaque nouveau harness peut apporter un type d'information que la structure ne sait pas stocker (c'est déjà arrivé avec les études : types `cours`, `notion`, `travail`). La structure évolue alors, mais **jamais automatiquement** : elle est le contrat dont dépendent le validateur, le consolidateur, la skill `memoire` et tous les harness déjà branchés. Un agent livré à lui-même crée trop facilement des types (un par outil), et la mémoire générale devient une juxtaposition de silos ; un harness qui lit du web ne doit pas non plus pouvoir faire changer la structure.
+
+La procédure complète est dans `docs/BRANCHER-UN-HARNESS.md`. En résumé :
+
+1. Le harness a un **manifeste** : ce qu'il lit, ce qu'il écrit (avec des exemples), sa provenance, où il garde ses données brutes.
+2. Une session fait la **correspondance** avec l'existant, dans cet ordre : type existant → champ facultatif → tag → facette → nouveau type en dernier recours. Elle rend une proposition sous forme de diff.
+3. Le user **valide**.
+4. Le changement est **appliqué partout d'un coup** (schéma, gabarit, tags, `_FORMATS.md`, tests, évals, décision), avec la version du schéma incrémentée.
+5. **Ajouter** ne casse rien. **Modifier** (renommer, supprimer, changer de sens) demande un script de migration des fiches existantes.
+
+Condition technique : **le schéma est une donnée**. Les types, champs et règles sont décrits dans `_schema.json`, que le validateur lit. Ajouter un type ne demande pas de toucher au code Python.
+
+Cela arrivera rarement : le prof de maths et Anki rentrent dans les types actuels, la veille hackathon demandera sans doute un type `hackathon`. On n'automatise donc pas davantage tant que les branchements restent rares.
+
 ## Structure du coffre (créée le 2026-10-28)
 
 ```
 D:\Europa\5. Memoire IA/
   _INDEX.md            niveau 1 : tous les projets et cours, une ligne chacun
   _TAGS.md             vocabulaire de tags autorisé
-  _FORMATS.md          le contrat : types de fiche, champs, règles
+  _FORMATS.md          le contrat lisible : types de fiche, champs, règles
+  _schema.json         le même contrat, lu par le validateur (versionné)
   _gabarits/           un gabarit par type de fiche
   00-Inbox/            dépôts bruts des sessions et des briques
   Projets/<projet>/
@@ -104,13 +121,14 @@ D:\Europa\5. Memoire IA/
 ## Ordre de construction
 
 1. Structure du coffre, `_INDEX.md`, `_TAGS.md`, gabarits de fiches, git init.
+   - 1 bis. Schéma en données : `_schema.json` lu par le validateur, procédure de branchement (`docs/BRANCHER-UN-HARNESS.md`).
 2. Remplir à la main 1 ou 2 projets existants (ex. open-agent-hack) pour valider les gabarits.
 3. Skill `memoire` (lecture/zoom) et test depuis une session sur un autre projet.
 4. Hook de fin de session → inbox.
 5. Agent de consolidation (inbox → fiches).
 6. Point quotidien planifié.
 7. Cycle de vie : archivage et fiche post-mortem.
-8. Adaptateurs des briques (veille hackathon, prof de maths, Anki). Le prof de maths peut se construire en parallèle dès l'étape 1 : il ne dépend que de `_FORMATS.md`.
+8. Adaptateurs des briques (veille hackathon, prof de maths, Anki), chacun via la procédure de branchement. Le prof de maths peut se construire en parallèle dès l'étape 1 : il ne dépend que de `_FORMATS.md`.
 9. Plus tard, si besoin : recherche sémantique locale, serveur MCP.
 
 ## Modèle et effort par étape
@@ -120,6 +138,7 @@ Deux choix distincts : le modèle de la session qui **construit** l'étape, et c
 | Étape | Construction | Exécution récurrente | Pourquoi |
 |---|---|---|---|
 | 1. Structure, index, tags, gabarits | Opus, medium | — | Les gabarits fixent tout le reste ; peu de fichiers, beaucoup de discussion |
+| 1 bis. Schéma en données | Sonnet, medium | — | Refonte bien spécifiée d'un script testé |
 | 2. Premières fiches | Le user à la main ; comparaison avec Sonnet, medium | — | Apprendre ce qui compte avant d'automatiser |
 | 3. Skill `memoire` (zoom) | Sonnet, high | Le modèle de la session qui l'appelle | Procédure claire, mais elle doit marcher depuis n'importe quel projet |
 | 4. Hook de fin de session → inbox | Prompt de résumé : Opus, high. Code du hook : Sonnet, medium | Haiku (à confirmer par les évals, sinon Sonnet) | Le prompt décide ce qui est retenu ; le résumé tourne à chaque session, donc il doit être bon marché |
@@ -127,12 +146,13 @@ Deux choix distincts : le modèle de la session qui **construit** l'étape, et c
 | 6. Point quotidien | Sonnet, medium | Haiku | Lecture d'un diff git et rédaction d'une note |
 | 7. Archivage et fiche bilan | Prompt de bilan : Opus, medium. Code : Sonnet, medium | Sonnet | Rare, mais la fiche bilan doit être fidèle |
 | 8. Adaptateurs des briques | Sonnet, medium | Haiku | Transformation de format, bien spécifiée |
+| Branchement d'un harness (à chaque fois) | Correspondance : Opus, high. Application : Sonnet, medium. Vérification : Haiku, low | — | Décider s'il faut un nouveau type est du jugement ; l'appliquer est mécanique |
 | 9. Recherche sémantique (si besoin) | Décision et évals : Opus, high. Code : Sonnet, medium | Embeddings locaux, sans LLM | Ne se justifie que si les évals montrent un manque |
 | Transverse : relectures, tests, évals, `PROGRESS.md` | Haiku, low | — | Mécanique |
 
 ## Questions ouvertes
 
 - ~~Coffre Obsidian existant~~ : tranché (décision 3), la mémoire vit dans `D:\Europa\5. Memoire IA` avec son propre git.
-- Rétention des conversations : Claude Code supprime par défaut les transcripts de plus de 30 jours (`cleanupPeriodDays`). À augmenter pour pouvoir ingérer après coup le travail fait avant que la mémoire soit prête.
+- ~~Rétention des conversations~~ : tranché, `cleanupPeriodDays` est à 3650 jours dans les réglages globaux de Claude Code.
 - Le point quotidien : seulement une note dans Obsidian, ou aussi une notification ?
 - L'agent de consolidation tourne-t-il à chaque fin de session, ou une fois par jour avant le point ?
