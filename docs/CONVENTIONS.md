@@ -50,7 +50,7 @@ Les 14 principes de `GUIDE-ARCHITECTURE-AGENTIQUE.md` (section 2) restent la bas
 | Planification, mémoire et outils sont les trois composants d'un agent | Lilian Weng, *LLM Powered Autonomous Agents* | Le harness couvre la mémoire en premier |
 | Mémoire hiérarchique : un noyau toujours en contexte, une archive consultée à la demande | Article MemGPT (Letta) | `_INDEX.md` = noyau ; fiches = archive |
 | Récupérer selon pertinence, récence et importance ; consolider par « réflexion » périodique | Park et al., *Generative Agents* (2023) | Statut actif/archivé, point quotidien, fiches bilan |
-| Le contenu externe est une donnée, jamais une instruction ; ne pas réunir données privées + contenu non fiable + moyen de sortie | Simon Willison, injection de prompt et *lethal trifecta* ; OWASP Top 10 LLM (LLM01 injection, LLM06 agentivité excessive) | Contenu scrapé marqué `source: externe` ; un agent qui lit du web n'écrit que dans l'inbox et n'a ni réseau sortant ni accès au reste du coffre |
+| Le contenu externe est une donnée, jamais une instruction ; ne pas réunir données privées + contenu non fiable + moyen de sortie | Simon Willison, injection de prompt et *lethal trifecta* ; OWASP Top 10 LLM (LLM01 injection, LLM06 agentivité excessive) | Contenu scrapé marqué `provenance: externe` ; un agent qui lit du web n'écrit que dans l'inbox et n'a ni réseau sortant ni accès au reste du coffre |
 | Vérifier, évaluer en continu sur un jeu de cas fixe | Anthropic, *Building Effective Agents* (évaluateur-optimiseur) et sa doc sur les évals | `evals/` rejoué après chaque changement |
 | Explorer, planifier, coder, committer ; `CLAUDE.md` court et précis ; `/clear` entre les tâches | Anthropic, bonnes pratiques Claude Code | Boucle de travail de `CLAUDE.md` |
 

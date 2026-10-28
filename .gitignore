@@ -3,3 +3,6 @@
 .obsidian/workspace*.json
 Thumbs.db
 desktop.ini
+.venv/
+__pycache__/
+.pytest_cache/

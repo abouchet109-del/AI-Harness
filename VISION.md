@@ -42,7 +42,11 @@ Un seul arbre de classement (code → langage → type → projet → fonction) 
 ### 2. Deux types de mémoire, séparés
 
 - **Mémoire « méta »** (sur mes projets) : fiches projet et composant, décisions, idées. Dans le coffre.
-- **Mémoire « données »** (ce que les briques traitent) : cours de maths, exercices, hackathons scrapés. Le **contenu à apprendre/réutiliser** va dans le coffre (une note par cours, par notion, par hackathon notable). Les **données brutes en volume** (tous les résultats de scraping) restent dans le stockage de la brique (SQLite/JSON dans son dossier) ; le coffre n'en garde qu'une synthèse et un lien. Sinon le coffre gonfle et la recherche se dégrade.
+- **Mémoire « données »** (ce que les briques traitent) : cours, notions, exercices, travaux, hackathons scrapés. Le **contenu à apprendre/réutiliser** va dans le coffre (une note par cours, par notion, par hackathon notable). Les **données brutes en volume** (tous les résultats de scraping) restent dans le stockage de la brique (SQLite/JSON dans son dossier) ; le coffre n'en garde qu'une synthèse et un lien. Sinon le coffre gonfle et la recherche se dégrade.
+
+  Exemple, les études : `Etudes/<cours>/` contient la fiche cours (échéances, reste à faire), une fiche par notion (maîtrise 0-4, dernière révision, suivi daté) et une par travail (deadline, documents). Anki reste la source de vérité de ses cartes et de leur planning ; son adaptateur dépose une synthèse dans l'inbox. Le code d'un harness (Anki, prof de maths) est, lui, un projet dans `Projets/`.
+
+- **Se brancher à la mémoire** : un harness lit en suivant la pyramide et écrit uniquement dans l'inbox, au format de `_FORMATS.md` (le contrat, vérifié par `scripts/valider_fiches.py`). Il n'a pas besoin de connaître le reste.
 
 ### 3. Écriture via une boîte de réception
 
@@ -76,20 +80,25 @@ Sources d'alimentation :
 - Une **skill `memoire`** décrit la procédure de zoom (lire `_INDEX.md` → fiche projet → fiche composant → code) et les règles d'écriture (inbox uniquement).
 - Le coffre est ajouté comme dossier accessible aux sessions Claude Code. Pas de serveur MCP au début : lire des fichiers Markdown suffit. Un serveur MCP (recherche, sémantique) se rajoute plus tard sans changer la structure.
 
-## Structure du coffre (proposition)
+## Structure du coffre (créée le 2026-10-28)
 
 ```
-<coffre>/
-  _INDEX.md            niveau 1 : tous les projets, une ligne chacun
+D:\Europa\5. Memoire IA/
+  _INDEX.md            niveau 1 : tous les projets et cours, une ligne chacun
   _TAGS.md             vocabulaire de tags autorisé
+  _FORMATS.md          le contrat : types de fiche, champs, règles
+  _gabarits/           un gabarit par type de fiche
   00-Inbox/            dépôts bruts des sessions et des briques
   Projets/<projet>/
-    <projet>.md        niveau 2 : fiche projet
+    <projet>.md        niveau 2 : fiche projet (idée, actif, ou bilan si archivé)
     composants/*.md    niveau 3 : fiches composant
-  Connaissances/       notions réutilisables (patterns, techniques)
-  Maths/               cours, notions, exercices (brique prof de maths)
-  Veille/Hackathons/   hackathons notables (brique veille)
-  Journal/             points quotidiens
+  Connaissances/       ce qui sert dans plusieurs projets (patterns, leçons)
+  Etudes/<cours>/
+    <cours>.md         fiche cours
+    notions/*.md       fiches notion
+    travaux/*.md       fiches travail (exposé, devoir, examen)
+  Veille/Hackathons/   hackathons notables (brique veille, format à définir)
+  Journal/             points quotidiens (format à définir, étape 6)
 ```
 
 ## Ordre de construction
@@ -101,7 +110,7 @@ Sources d'alimentation :
 5. Agent de consolidation (inbox → fiches).
 6. Point quotidien planifié.
 7. Cycle de vie : archivage et fiche post-mortem.
-8. Adaptateurs des briques (veille hackathon, prof de maths).
+8. Adaptateurs des briques (veille hackathon, prof de maths, Anki). Le prof de maths peut se construire en parallèle dès l'étape 1 : il ne dépend que de `_FORMATS.md`.
 9. Plus tard, si besoin : recherche sémantique locale, serveur MCP.
 
 ## Modèle et effort par étape
@@ -123,7 +132,7 @@ Deux choix distincts : le modèle de la session qui **construit** l'étape, et c
 
 ## Questions ouvertes
 
-- Coffre Obsidian existant : `D:\Europa` (152 notes, dossiers `0. Index`, `1.Projet`, `2. roles`, `3. ressource`, `4. tutoriels`, plus des notes perso). Proposition : la mémoire IA vit dans un sous-dossier dédié (ex. `D:\Europa\5. Memoire IA`), avec son propre dépôt git, et les agents n'écrivent que là. Les notes perso restent hors de git et hors de portée des agents. À valider.
+- ~~Coffre Obsidian existant~~ : tranché (décision 3), la mémoire vit dans `D:\Europa\5. Memoire IA` avec son propre git.
 - Rétention des conversations : Claude Code supprime par défaut les transcripts de plus de 30 jours (`cleanupPeriodDays`). À augmenter pour pouvoir ingérer après coup le travail fait avant que la mémoire soit prête.
 - Le point quotidien : seulement une note dans Obsidian, ou aussi une notification ?
 - L'agent de consolidation tourne-t-il à chaque fin de session, ou une fois par jour avant le point ?
