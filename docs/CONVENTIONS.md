@@ -8,11 +8,12 @@ Référence lue à la demande (pas chargée à chaque session, contrairement à 
 - **`CLAUDE.md` reste court.** Il est chargé à chaque message ; le détail va ici, dans `VISION.md` ou dans les docs, lus seulement quand la tâche en a besoin.
 - **Lire ciblé.** Chercher (Grep, Glob) avant de lire ; lire une section, pas un fichier entier quand c'est inutile ; ne pas relire un fichier qu'on vient d'écrire.
 - **Sous-agents pour les recherches larges.** Ils lisent beaucoup et ne renvoient que la conclusion : le contexte principal reste petit.
-- **Choisir le modèle à la tâche.**
-  - Opus : architecture, prompts d'agents, logique subtile, débogage qui a échoué deux fois.
-  - Sonnet : code bien spécifié avec tests, skills, scripts.
-  - Haiku : relectures de cohérence, lancer les tests, mises à jour de `PROGRESS.md`.
-  - Commencer au niveau le moins cher quand la spécification est précise ; monter après deux échecs.
+- **Choisir le modèle et l'effort à la tâche.** La règle générale est dans le `CLAUDE.md` global (lu par toutes les sessions). Pour ce projet, la table par étape de `VISION.md` prime. En résumé :
+  - Opus, effort high : architecture, prompts d'agents, logique subtile, débogage qui a échoué deux fois (medium si c'est surtout une discussion).
+  - Sonnet, effort medium : code bien spécifié avec tests, skills, scripts, hooks.
+  - Haiku, effort low : relectures de cohérence, lancer les tests et les évals, mises à jour de `PROGRESS.md`.
+  - Commencer au niveau le moins cher quand la spécification est précise ; monter d'un cran après deux échecs.
+  - Distinguer le modèle qui **construit** un agent de celui qui le **fait tourner** : le second est un coût récurrent (chaque session, chaque jour) et se choisit à part.
 - **Plan avant code** pour toute tâche non triviale : un plan relu coûte moins cher qu'un code jeté.
 - **Les fichiers sont la mémoire de travail.** Une décision qui n'est que dans la conversation est perdue au prochain `/clear` : elle va dans `docs/DECISIONS.md` ou `PROGRESS.md`.
 

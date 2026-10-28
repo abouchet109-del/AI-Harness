@@ -104,6 +104,23 @@ Sources d'alimentation :
 8. Adaptateurs des briques (veille hackathon, prof de maths).
 9. Plus tard, si besoin : recherche sémantique locale, serveur MCP.
 
+## Modèle et effort par étape
+
+Deux choix distincts : le modèle de la session qui **construit** l'étape, et celui de l'agent qui **tourne** ensuite (coût récurrent). Valeurs de départ, à ajuster selon les mesures ; monter d'un cran après deux échecs.
+
+| Étape | Construction | Exécution récurrente | Pourquoi |
+|---|---|---|---|
+| 1. Structure, index, tags, gabarits | Opus, medium | — | Les gabarits fixent tout le reste ; peu de fichiers, beaucoup de discussion |
+| 2. Premières fiches | Le user à la main ; comparaison avec Sonnet, medium | — | Apprendre ce qui compte avant d'automatiser |
+| 3. Skill `memoire` (zoom) | Sonnet, high | Le modèle de la session qui l'appelle | Procédure claire, mais elle doit marcher depuis n'importe quel projet |
+| 4. Hook de fin de session → inbox | Prompt de résumé : Opus, high. Code du hook : Sonnet, medium | Haiku (à confirmer par les évals, sinon Sonnet) | Le prompt décide ce qui est retenu ; le résumé tourne à chaque session, donc il doit être bon marché |
+| 5. Agent de consolidation | Opus, high | Sonnet | Cœur du système ; une erreur crée un faux souvenir |
+| 6. Point quotidien | Sonnet, medium | Haiku | Lecture d'un diff git et rédaction d'une note |
+| 7. Archivage et fiche bilan | Prompt de bilan : Opus, medium. Code : Sonnet, medium | Sonnet | Rare, mais la fiche bilan doit être fidèle |
+| 8. Adaptateurs des briques | Sonnet, medium | Haiku | Transformation de format, bien spécifiée |
+| 9. Recherche sémantique (si besoin) | Décision et évals : Opus, high. Code : Sonnet, medium | Embeddings locaux, sans LLM | Ne se justifie que si les évals montrent un manque |
+| Transverse : relectures, tests, évals, `PROGRESS.md` | Haiku, low | — | Mécanique |
+
 ## Questions ouvertes
 
 - Coffre Obsidian existant : `D:\Europa` (152 notes, dossiers `0. Index`, `1.Projet`, `2. roles`, `3. ressource`, `4. tutoriels`, plus des notes perso). Proposition : la mémoire IA vit dans un sous-dossier dédié (ex. `D:\Europa\5. Memoire IA`), avec son propre dépôt git, et les agents n'écrivent que là. Les notes perso restent hors de git et hors de portée des agents. À valider.
