@@ -98,7 +98,7 @@ Les adaptateurs sont **du code, pas des agents** : ils transforment un format bi
 | Agent | Entrée → sortie | Déclencheur | Modèle d'exécution | Garde-fous | État |
 |---|---|---|---|---|---|
 | Résumeur de session | Transcript d'une session → une note d'inbox (idées, décisions, erreurs, état, fichiers touchés, lien vers la session) | Hook de fin de session | Haiku (à confirmer par les évals) | N'écrit que dans l'inbox ; sessions triviales ignorées (seuil à définir) ; sortie validée par le validateur | Étape 4, attend la réflexion du user sur « que retenir » |
-| Consolidateur | Notes d'inbox → mises à jour de fiches | Une fois par jour avant le point, ou à la demande (question ouverte) | Sonnet | Seul écrivain des fiches ; verrou ; validateur avant commit ; pas d'accès réseau ; `a_valider` respecté ; ne touche jamais au schéma | Étape 5 |
+| Consolidateur | Notes d'inbox → une liste d'opérations JSON (`ajouter`, `creer`, `remplacer`, `champ`, `rien`, `hors_schema`), appliquée par du code | Une fois par jour avant le point (décision 20) | Sonnet | Seul écrivain des fiches ; ne réécrit jamais une fiche entière ; une source par fait ; verrou ; validateur avant commit ; pas d'accès réseau ; `a_valider` respecté ; ne touche jamais au schéma | Étape 5 |
 | Rédacteur du point quotidien | Diff git + échéances → `Journal/AAAA-MM-JJ.md` | Tâche planifiée quotidienne | Haiku (le gros du travail est fait par le code) | Lecture seule hors `Journal/` | Étape 6 |
 | Rédacteur de bilan | Fiche projet + dépôt du projet → section bilan | Passage d'un projet en `statut/archive` | Sonnet | Proposé dans l'inbox, validé par le user | Étape 7 |
 
@@ -113,6 +113,7 @@ Les adaptateurs sont **du code, pas des agents** : ils transforment un format bi
 
 | Déclencheur | Ce qu'il lance | Outil | État |
 |---|---|---|---|
+| Hook `PreToolUse` de Claude Code (réglages globaux, toutes les sessions) | `hooks/garde-europa.js` : demande confirmation avant tout accès à `D:\Europa` hors `5. Memoire IA` (lecture, écriture, recherche, commandes shell) | Node, environ 90 ms par appel | Script fait et testé (34 tests). **Non vérifié en conditions réelles** : un premier essai dans une session neuve ne l'a pas déclenché (déclaration `command` + `args` probablement non prise en charge) ; déclaration corrigée, 2e essai en cours. Les hooks sont chargés au démarrage d'une session |
 | Hook `SessionEnd` de Claude Code (réglages globaux, donc tous les projets) | Le résumeur de session, en tâche de fond (`claude -p` en mode non interactif) | Claude Code, gratuit avec l'abonnement | Étape 4 ; s'installe sur toutes les sessions, donc avec l'accord du user |
 | Tâche quotidienne | Adaptateurs, puis consolidateur, puis validateur, puis point quotidien, enchaînés par un script | Planificateur de tâches Windows (gratuit) | Étapes 5, 6 et 8 |
 
@@ -151,14 +152,14 @@ Les 14 principes de `GUIDE-ARCHITECTURE-AGENTIQUE.md` (section 2), et ce qui res
 |---|---|---|---|
 | 1 | Simplicité d'abord | Pas de base vectorielle, pas de serveur MCP, pas d'agent autonome ; 4 agents seulement, tous en workflow | — |
 | 2 | Le contexte est la ressource rare | Pyramide de zoom ; filtrage par frontmatter avant lecture des corps ; `CLAUDE.md` court | À mesurer avec les budgets de `evals/` |
-| 3 | Déterministe dès que possible | Validateur, adaptateurs, diff, index, échéances : du code | **Écart** : l'interdiction de lire le reste de `D:\Europa` n'est qu'une consigne (`CLAUDE.md` d'AI-Harness, future skill). Il faut une règle de permission ou un hook qui la fasse respecter, dans toutes les sessions (voir point ouvert 2) |
-| 4 | Vérifier vaut plus que générer | Validateur après chaque consolidation ; évals ; relecture quotidienne | Le validateur vérifie la forme, pas le fond : une fiche bien formée peut contenir un faux souvenir. Le lien `sources` et le point quotidien sont les seuls filets |
+| 3 | Déterministe dès que possible | Validateur, adaptateurs, diff, index, échéances : du code ; la frontière du coffre perso est tenue par un hook global (`hooks/garde-europa.js`), pas par une consigne ; le consolidateur rend des opérations appliquées par du code | Le hook lit le texte des commandes shell : un chemin construit dans une variable lui échappe (protection contre l'erreur et l'injection évidente, pas frontière de sécurité) |
+| 4 | Vérifier vaut plus que générer | Validateur après chaque consolidation ; évals ; relecture quotidienne | Le validateur vérifie la forme, pas le fond. Filets contre les faux souvenirs : une source par fait, opérations limitées au lieu de réécritures, rien de supprimé, diff dans le point quotidien (`docs/FONDEMENTS-MEMOIRE.md`) |
 | 5 | Isolation des rôles | Chaque agent a une entrée, une sortie et des droits limités | Les droits restent à fixer à l'exécution (`claude -p` avec outils autorisés restreints et dossier de travail limité) |
-| 6 | Un seul écrivain par ressource | Inbox en ajout seul (un fichier par note) ; seul le consolidateur écrit les fiches | **À faire** : un verrou pour empêcher deux consolidations simultanées (tâche planifiée et lancement manuel) |
+| 6 | Un seul écrivain par ressource | Inbox en ajout seul (un fichier par note) ; seul le consolidateur écrit les fiches | Verrou exigé à l'étape 5 (`VISION.md`, règles du consolidateur) |
 | 7 | Humain dans la boucle sur l'irréversible | Changement de structure validé ; bilan validé ; contenu externe `a_valider` | La consolidation courante est automatique : acceptable parce qu'elle est réversible (principe 9) |
-| 8 | Moindre privilège | Les harness n'écrivent que dans l'inbox ; le consolidateur n'a pas de réseau | Même écart qu'au principe 3 pour la lecture du coffre perso |
+| 8 | Moindre privilège | Les harness n'écrivent que dans l'inbox ; le consolidateur n'a pas de réseau ; le coffre perso demande confirmation (hook) | Les droits de chaque agent non interactif (outils autorisés, dossier) restent à fixer à sa construction |
 | 9 | Réversibilité | Git sur le coffre, un commit par consolidation, `git revert` | Le git du coffre est seulement local : pas de sauvegarde hors du PC (choix volontaire pour la vie privée, à reconsidérer) |
-| 10 | Observabilité | Commits du coffre, point quotidien | **À concevoir** (étape 4) : une trace par appel de modèle (agent, modèle, fichiers lus, tokens, durée), hors du coffre, par exemple `logs/` dans AI-Harness |
+| 10 | Observabilité | Commits du coffre, point quotidien ; format de trace défini (`docs/CONVENTIONS.md`, une ligne JSON par appel de modèle dans `logs/traces/`) | À implémenter avec le premier agent (étape 4) |
 | 11 | Évaluation continue | `evals/questions.md` (brouillon de 14 questions, à valider) | Le runner vient avec l'étape 3 ; le user doit valider et compléter les questions |
 | 12 | Le système de fichiers est une mémoire externe | C'est le cœur du projet ; `PROGRESS.md`, `DECISIONS.md` | — |
 | 13 | L'interface des outils comme une UX | Validateur aux messages qui disent quoi corriger | À appliquer au script de recherche de la skill `memoire` |
@@ -173,6 +174,7 @@ Autres règles du guide :
 ## Points ouverts
 
 1. **La veille hackathon tourne sur GitHub Actions, le coffre est sur le PC.** Son adaptateur ne peut pas écrire directement dans l'inbox depuis le cloud. Solution probable : la tâche quotidienne locale fait un `git pull` du dépôt `hackathon-watch` et lit son état (`state/hackwatch.db`). À trancher à l'étape 8.
-2. **Faire respecter la frontière du coffre perso par la configuration.** Règle de refus de lecture et d'écriture sur `D:\Europa` sauf `5. Memoire IA`, dans les réglages globaux de Claude Code (s'applique à toutes les sessions), ou un hook `PreToolUse`. Touche les réglages globaux : à faire avec l'accord du user, idéalement avant l'étape 3.
-3. **Quand tourne le consolidateur** : à chaque fin de session ou une fois par jour (`VISION.md`, questions ouvertes). Une fois par jour est plus simple et moins cher ; c'est la proposition par défaut.
-4. **Que retient le résumeur** d'une session : la question de conception centrale de l'étape 4, à réfléchir par le user.
+2. ~~Frontière du coffre perso~~ : réglé par le hook `garde-europa` (décision 19). Une règle de permission ne pouvait pas convenir : un refus l'emporte toujours sur une autorisation, donc « refuser `D:\Europa` sauf `5. Memoire IA` » ne s'écrit pas.
+3. ~~Quand tourne le consolidateur~~ : une fois par jour (décision 20).
+4. **Que retient le résumeur** d'une session : proposition de départ dans `docs/FONDEMENTS-MEMOIRE.md`, à valider par le user avant l'étape 4.
+5. **Les agents non interactifs ont besoin de la commande `claude` connectée.** Celle livrée avec l'app de bureau répond « Not logged in » en ligne de commande. Il faut installer Claude Code en ligne de commande (dans `D:\Tools\npm-global`) et que le user s'y connecte une fois. Prérequis de l'étape 4. L'alternative, le SDK avec une clé d'API, est payante à l'usage et donc écartée (outils gratuits).

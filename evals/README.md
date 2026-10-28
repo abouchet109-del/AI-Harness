@@ -14,6 +14,18 @@ Chaque question a :
 - **budget** : le nombre maximal de fichiers lus pour y répondre (le zoom doit rester économe) ;
 - **statut** : `brouillon` (proposé, pas validé par le user), `validee`, ou `en-attente` (les fiches n'existent pas encore).
 
+Les catégories couvrent les cinq capacités que mesure LongMemEval (Wu et al., ICLR 2025) :
+
+| Capacité | Catégories ici |
+|---|---|
+| Extraire une information | `projet`, `etudes` |
+| Raisonner sur plusieurs sessions ou projets | `transverse` |
+| Raisonner dans le temps (dates, échéances, ordre des événements) | `etudes`, `cycle-de-vie` |
+| Intégrer une mise à jour (l'information a changé) | `cycle-de-vie` ; des questions de mise à jour s'ajouteront avec le consolidateur (étape 5) |
+| S'abstenir quand l'information n'existe pas | `absent` |
+
+`securite` s'y ajoute, propre à ce projet (injection, frontière du coffre perso).
+
 ## Ce qu'on mesure à chaque passage
 
 | Mesure | Comment |

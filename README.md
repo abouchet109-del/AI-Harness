@@ -15,7 +15,9 @@ Architecture IA personnelle. Sa brique centrale est une **mémoire de tous mes p
 |---|---|
 | `VISION.md` | La vision, les choix de conception, l'ordre de construction, le modèle et l'effort par étape |
 | `docs/ARCHITECTURE.md` | Tous les composants (code, agents, skills, hooks, tâches), comment ça tourne, conformité au guide |
+| `docs/FONDEMENTS-MEMOIRE.md` | Ce que les neurosciences, les sciences des organisations et la littérature sur les agents apportent à la conception |
 | `evals/` | Les questions posées à la mémoire pour vérifier qu'elle marche |
+| `hooks/garde-europa.js` | Hook global qui demande confirmation avant tout accès au coffre perso hors de la mémoire |
 | `PROGRESS.md` | Où on en est, prochaine action |
 | `docs/DECISIONS.md` | Toutes les décisions, avec leur pourquoi |
 | `docs/CONVENTIONS.md` | Façon de travailler : Claude Code, code, agents, principes sourcés |

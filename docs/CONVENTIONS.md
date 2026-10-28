@@ -31,7 +31,15 @@ Référence lue à la demande (pas chargée à chaque session, contrairement à 
 - **Un agent = une responsabilité**, avec une entrée et une sortie définies (un format de fichier, un frontmatter).
 - **Sortie vérifiable par du code.** Un agent qui écrit une fiche produit un frontmatter que le code valide (tags dans `_TAGS.md`, champs obligatoires, lien source présent).
 - **Divulgation progressive.** Un agent lit `_INDEX.md`, puis la fiche projet, puis la fiche composant, et n'ouvre le code qu'à la fin.
-- **Traçabilité.** Chaque appel de modèle laisse une trace (modèle, tâche, fichiers lus, tokens si connus) pour comprendre et mesurer.
+- **Traçabilité.** Chaque appel de modèle d'un agent du harness laisse une ligne JSON dans `logs/traces/AAAA-MM.jsonl` (non versionné, décision 22) :
+
+  ```json
+  {"date": "2026-10-28T21:00", "agent": "consolidateur", "modele": "claude-sonnet-5-5", "declencheur": "tache-quotidienne",
+   "lus": ["00-Inbox/…"], "ecrits": ["Projets/…"], "tokens_entree": 12000, "tokens_sortie": 900,
+   "duree_s": 41, "resultat": "ok", "note": ""}
+  ```
+
+  `resultat` vaut `ok`, `refus_validateur`, `erreur` ou `ignore`. Les tokens sont à `null` si l'outil ne les donne pas. C'est ce fichier qui permet de dire combien coûte chaque brique.
 - **Évaluation.** `evals/` contient des questions réelles posées à la mémoire, avec la réponse ou la fiche attendue. On les rejoue après chaque changement de structure, de gabarit ou de prompt.
 - **Une mémoire fausse est pire qu'une mémoire vide.** Dans le doute, l'agent écrit dans l'inbox avec un marqueur « à valider » plutôt que dans une fiche.
 - **La structure évolue par procédure, jamais en douce.** Types, champs, facettes et tags changent seulement via `docs/BRANCHER-UN-HARNESS.md`, avec l'accord du user. On ajoute plutôt que modifier ; une modification demande une migration. Le schéma est une donnée (`_schema.json`), pas du code.
@@ -48,6 +56,7 @@ Les 14 principes de `GUIDE-ARCHITECTURE-AGENTIQUE.md` (section 2) restent la bas
 | Être maître de ses prompts et de sa fenêtre de contexte ; petits agents focalisés ; état explicite, reprise possible | HumanLayer, *12-Factor Agents* (facteurs 2, 3, 5, 10, 12) | Prompts versionnés dans le dépôt ; un agent = une tâche ; état dans des fichiers, pas dans la session |
 | Le multi-agents coûte cher et perd de l'information ; partager le contexte et les décisions, pas seulement la consigne | Cognition, *Don't Build Multi-Agents* ; Anthropic (multi-agents ≈ beaucoup plus de tokens qu'une session simple) | Un seul consolidateur ; sous-agents réservés à la lecture large |
 | Les outils sont une interface pour le modèle : peu d'outils, noms et descriptions précis, erreurs qui disent quoi faire | Anthropic, *Writing Effective Tools for Agents* (et l'« ACI » de *Building Effective Agents*) | La skill `memoire` et ses scripts ont des sorties courtes et explicites |
+| Capture rapide, intégration lente ; mettre à jour par opérations sans réécrire ; une source par fait ; savoir qui sait quoi ; bilan structuré | Neurosciences et sciences des organisations, détaillées dans `docs/FONDEMENTS-MEMOIRE.md` | Consolidation quotidienne par opérations (décisions 20, 21) ; bilan *After Action Review* (décision 23) |
 | Planification, mémoire et outils sont les trois composants d'un agent | Lilian Weng, *LLM Powered Autonomous Agents* | Le harness couvre la mémoire en premier |
 | Mémoire hiérarchique : un noyau toujours en contexte, une archive consultée à la demande | Article MemGPT (Letta) | `_INDEX.md` = noyau ; fiches = archive |
 | Récupérer selon pertinence, récence et importance ; consolider par « réflexion » périodique | Park et al., *Generative Agents* (2023) | Statut actif/archivé, point quotidien, fiches bilan |

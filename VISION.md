@@ -57,6 +57,14 @@ Les briques et les sessions n'écrivent pas directement partout dans le coffre :
 
 Un seul agent touche à la structure, ce qui évite les doublons et les fiches contradictoires.
 
+Règles du consolidateur (fondements dans `docs/FONDEMENTS-MEMOIRE.md`) :
+- **Une fois par jour**, en un passage, avant le point quotidien : capture rapide dans l'inbox, intégration lente et groupée (comme le sommeil pour la mémoire humaine).
+- **Des opérations, pas des réécritures.** Il rend une liste d'opérations en JSON (`ajouter`, `creer`, `remplacer`, `champ`, `rien`, `hors_schema`) que le code applique et que le validateur vérifie. Il ne réécrit jamais une fiche entière : chaque réécriture risquerait de la déformer un peu plus.
+- **Une source par fait** : chaque ligne qu'il ajoute porte sa source entre parenthèses. Un fait sans source n'est pas écrit.
+- **Rien n'est supprimé** : une ligne devenue fausse est marquée remplacée, avec la date et la source de la nouvelle.
+- **Hors schéma** : une note qui ne rentre dans aucun type reste dans l'inbox et remonte au point quotidien ; si ça se répète, on suit la procédure de branchement.
+- **Garde-fous d'exécution** : un verrou empêche deux consolidations simultanées ; pas d'accès réseau ni d'outil d'envoi (il lit du contenu externe et des données privées) ; une durée maximale et un nombre maximal de notes par passage ; une trace par appel de modèle.
+
 Sources d'alimentation :
 - Sessions Claude Code : hook de fin de session qui écrit un résumé dans l'inbox.
 - Briques (veille hackathon, prof de maths) : un petit adaptateur par brique qui écrit au format commun.
@@ -66,7 +74,7 @@ Sources d'alimentation :
 - `statut/actif` : la fiche projet porte un bloc « état actuel » (où on en est, prochaine étape), mis à jour par la consolidation.
 - Passage en `statut/archive` (manuel ou détecté) :
   1. Le brut (code, README, agents, historique) reste dans le dépôt git du projet, ou part dans `D:\Archives\<projet>`. La fiche garde le lien.
-  2. Un agent rédige une **fiche post-mortem** : ce qu'était le projet, ce qui a été codé, l'archi, les idées (retenues et abandonnées), ce qui est réutilisable.
+  2. Un agent rédige un **bilan** (section de la fiche projet, décision 8), sur le modèle de l'*After Action Review* : qu'est-ce qui était prévu, que s'est-il passé, pourquoi l'écart, que garder et que changer ; plus ce qui a été codé, l'archi, les idées (retenues et abandonnées) et ce qui est réutilisable. Il le propose dans l'inbox ; le user valide.
   3. Le bloc « état actuel » est retiré ; les composants réutilisables gardent leur fiche.
 
 ### 5. Le point quotidien
@@ -124,7 +132,7 @@ D:\Europa\5. Memoire IA/
    - 1 bis. Schéma en données : `_schema.json` lu par le validateur, procédure de branchement (`docs/BRANCHER-UN-HARNESS.md`).
 2. Remplir à la main 1 ou 2 projets existants (ex. open-agent-hack) pour valider les gabarits.
 3. Skill `memoire` (lecture/zoom) et test depuis une session sur un autre projet.
-4. Hook de fin de session → inbox.
+4. Hook de fin de session → inbox. Prérequis : la commande `claude` en ligne de commande, connectée au compte du user (celle de l'app de bureau ne l'est pas), pour lancer le résumeur en mode non interactif.
 5. Agent de consolidation (inbox → fiches).
 6. Point quotidien planifié.
 7. Cycle de vie : archivage et fiche post-mortem.
@@ -155,4 +163,6 @@ Deux choix distincts : le modèle de la session qui **construit** l'étape, et c
 - ~~Coffre Obsidian existant~~ : tranché (décision 3), la mémoire vit dans `D:\Europa\5. Memoire IA` avec son propre git.
 - ~~Rétention des conversations~~ : tranché, `cleanupPeriodDays` est à 3650 jours dans les réglages globaux de Claude Code.
 - Le point quotidien : seulement une note dans Obsidian, ou aussi une notification ?
-- L'agent de consolidation tourne-t-il à chaque fin de session, ou une fois par jour avant le point ?
+- ~~Fréquence du consolidateur~~ : tranché, une fois par jour avant le point (décision 20).
+- Que retient le résumeur de session ? Proposition de départ dans `docs/FONDEMENTS-MEMOIRE.md`, à valider par le user avant l'étape 4.
+- Pousser la mémoire au début d'une session (quelques lignes sur le projet) : utile mais coûteux, à décider après l'étape 3.
