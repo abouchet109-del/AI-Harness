@@ -14,6 +14,8 @@ Architecture IA personnelle. Sa brique centrale est une **mémoire de tous mes p
 | Fichier | Contenu |
 |---|---|
 | `VISION.md` | La vision, les choix de conception, l'ordre de construction, le modèle et l'effort par étape |
+| `docs/ARCHITECTURE.md` | Tous les composants (code, agents, skills, hooks, tâches), comment ça tourne, conformité au guide |
+| `evals/` | Les questions posées à la mémoire pour vérifier qu'elle marche |
 | `PROGRESS.md` | Où on en est, prochaine action |
 | `docs/DECISIONS.md` | Toutes les décisions, avec leur pourquoi |
 | `docs/CONVENTIONS.md` | Façon de travailler : Claude Code, code, agents, principes sourcés |
