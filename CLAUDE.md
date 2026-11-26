@@ -18,14 +18,13 @@ AI-Harness : l'architecture IA perso du user, dont la brique centrale est une m�
 - Outils gratuits uniquement. Une dépendance nouvelle se justifie dans `docs/DECISIONS.md`.
 
 ## Boucle de travail, pour chaque tâche
-1. Comprendre : l'étape de `VISION.md` concernée, une phrase sur ce qui doit être vrai à la fin, et comment on le vérifie.
-2. Planifier : fichiers, test, risques. Pour une tâche de plus de 30 min, ou qui touche un gabarit, un prompt ou la structure du coffre, montrer le plan d'abord.
-3. Test d'abord quand c'est possible (y compris une question d'évaluation dans `evals/`).
-4. Le plus petit changement qui le fait passer.
-5. Vérifier en vrai : lancer le test, ouvrir le résultat dans le coffre.
-6. Relire son diff (liste ci-dessous), corriger.
-7. Livrer : petit commit qui dit quoi et pourquoi, puis push ; mettre à jour `PROGRESS.md`.
-8. Bloqué après deux essais : chercher la cause, pas un contournement, et le signaler.
+1. Avant de coder, savoir quelle étape de `VISION.md` on sert, ce qui doit être vrai à la fin et comment le vérifier. Pour une tâche de plus de 30 min, ou qui touche un gabarit, un prompt ou la structure du coffre, montrer d'abord le plan (fichiers, test, risques) et attendre l'accord.
+2. Test d'abord quand c'est possible (y compris une question d'évaluation dans `evals/`).
+3. Le plus petit changement qui le fait passer.
+4. Vérifier en vrai : lancer le test, ouvrir le résultat dans le coffre.
+5. Relire son diff (liste ci-dessous), corriger.
+6. Livrer : petit commit qui dit quoi et pourquoi, puis push ; mettre à jour `PROGRESS.md`.
+7. Bloqué après deux essais : chercher la cause, pas un contournement, et le signaler.
 
 Interdit : affaiblir ou supprimer un test pour qu'il passe ; dire « fini » sans avoir vérifié ; `git add -A` si une autre session travaille dans le dossier ; réécrire l'historique publié.
 
